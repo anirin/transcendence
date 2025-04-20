@@ -1,0 +1,15 @@
+{
+  "name": "websocket-demo",
+  "version": "1.0.0",
+  "description": "Simple WebSocket demo",
+  "main": "backend/websocket.js",
+  "scripts": {
+    "start": "node backend/websocket.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

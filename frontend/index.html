@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Game</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Ping Pong Game</h1>
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="score-container">
+                <div>左側スコア: <span id="leftScore">0</span></div>
+                <div>右側スコア: <span id="rightScore">0</span></div>
+            </div>
+        </div>
+        <div class="controls">
+            <p id="playerStatus">接続中...</p>
+            <p>操作方法: ↑ ↓ キーでパドルを移動</p>
+            <button id="startButton" disabled>ゲーム開始</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html> 
