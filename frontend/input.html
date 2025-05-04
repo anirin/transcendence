@@ -11,9 +11,11 @@
             var names = [];
             var inputs = document.getElementsByName('names');
             for (var i = 0; i < inputs.length; i++) {
-                names.push(encodeURIComponent(inputs[i].value));
+                names.push(inputs[i].value);
             }
-            var url = "./main.html?names=" + names.join(',');
+            // localStorageに参加者名を保存
+            localStorage.setItem('tournamentNames', JSON.stringify(names));
+            var url = "./main.html";
 			window.location.href = url;
 		}
     </script>

@@ -152,8 +152,8 @@
         }
 
         function setupInputFields() {
-            var params = getUrlParams();
-            var names = params.names ? params.names.split(',') : ['', '', '', ''];
+            // localStorageから参加者名を取得
+            var names = JSON.parse(localStorage.getItem('tournamentNames')) || ['', '', '', ''];
             
             var nameInputs = document.getElementsByClassName('name-input');
             var scoreInputs = document.getElementsByClassName('score-input');
@@ -197,10 +197,26 @@
 
         function setupMatchButtons() {
             var matchButtons = document.getElementsByClassName('match-button');
+            // localStorageから試合の進行状況を取得
+            var matchProgress = JSON.parse(localStorage.getItem('matchProgress')) || {
+                currentMatch: 0,
+                completedMatches: []
+            };
+            // localStorageから試合履歴を取得
+            var matchHistory = JSON.parse(localStorage.getItem('matchHistory')) || [];
+
             for (var i = 0; i < matchButtons.length; i++) {
-                matchButtons[i].disabled = i !== 0;
+                // 既に完了した試合は無効化
+                matchButtons[i].disabled = !matchProgress.completedMatches.includes(i) && i !== matchProgress.currentMatch;
+                
                 matchButtons[i].addEventListener('click', function() {
                     var currentIndex = Array.from(matchButtons).indexOf(this);
+                    
+                    // 試合の進行状況を更新
+                    matchProgress.completedMatches.push(currentIndex);
+                    matchProgress.currentMatch = currentIndex + 1;
+                    localStorage.setItem('matchProgress', JSON.stringify(matchProgress));
+                    
                     // 次の試合のボタンを有効化
                     if (currentIndex + 1 < matchButtons.length) {
                         matchButtons[currentIndex + 1].disabled = false;
@@ -211,7 +227,7 @@
                     // ゲームページへの遷移
                     var player1Name = document.getElementsByClassName('name-input')[currentIndex * 2].value;
                     var player2Name = document.getElementsByClassName('name-input')[currentIndex * 2 + 1].value;
-                    var matchId = currentIndex + 1; // 試合IDとしてインデックス+1を使用
+                    var matchId = currentIndex + 1;
                     
                     window.location.href = `game.html?player1=${encodeURIComponent(player1Name)}&player2=${encodeURIComponent(player2Name)}&matchId=${matchId}`;
                 });
@@ -222,7 +238,112 @@
             setupInputFields();
             drawTournament();
             setupMatchButtons();
+            
+            // 全ての試合結果を取得して反映
+            const matchHistory = JSON.parse(localStorage.getItem('matchHistory')) || [];
+            const nameInputs = document.getElementsByClassName('name-input');
+            const scoreInputs = document.getElementsByClassName('score-input');
+
+            // 各試合の結果を反映
+            matchHistory.forEach(match => {
+                const matchIndex = match.matchId - 1;
+                if (matchIndex === 0) { // 1回戦1試合目
+                    scoreInputs[0].value = match.score1;
+                    scoreInputs[1].value = match.score2;
+                    nameInputs[4].value = match.winner;
+                } else if (matchIndex === 1) { // 1回戦2試合目
+                    scoreInputs[2].value = match.score1;
+                    scoreInputs[3].value = match.score2;
+                    nameInputs[5].value = match.winner;
+                } else if (matchIndex === 2) { // 決勝戦
+                    scoreInputs[4].value = match.score1;
+                    scoreInputs[5].value = match.score2;
+                    nameInputs[6].value = match.winner;
+                }
+            });
+
+            // 最新の試合結果を取得して反映
+            const matchResult = JSON.parse(localStorage.getItem('matchResult'));
+            if (matchResult) {
+                const matchIndex = matchResult.matchId - 1;
+                if (matchIndex === 0) { // 1回戦1試合目
+                    scoreInputs[0].value = matchResult.winner === matchResult.player1 ? matchResult.winnerScore : matchResult.loserScore;
+                    scoreInputs[1].value = matchResult.winner === matchResult.player2 ? matchResult.winnerScore : matchResult.loserScore;
+                    nameInputs[4].value = matchResult.winner;
+                } else if (matchIndex === 1) { // 1回戦2試合目
+                    scoreInputs[2].value = matchResult.winner === matchResult.player1 ? matchResult.winnerScore : matchResult.loserScore;
+                    scoreInputs[3].value = matchResult.winner === matchResult.player2 ? matchResult.winnerScore : matchResult.loserScore;
+                    nameInputs[5].value = matchResult.winner;
+                } else if (matchIndex === 2) { // 決勝戦
+                    scoreInputs[4].value = matchResult.winner === matchResult.player1 ? matchResult.winnerScore : matchResult.loserScore;
+                    scoreInputs[5].value = matchResult.winner === matchResult.player2 ? matchResult.winnerScore : matchResult.loserScore;
+                    nameInputs[6].value = matchResult.winner;
+                }
+
+                // 試合履歴に追加
+                matchHistory.push({
+                    matchId: matchResult.matchId,
+                    round: matchIndex === 2 ? '決勝戦' : '1回戦',
+                    player1: matchResult.player1,
+                    player2: matchResult.player2,
+                    score1: matchResult.winner === matchResult.player1 ? matchResult.winnerScore : matchResult.loserScore,
+                    score2: matchResult.winner === matchResult.player2 ? matchResult.winnerScore : matchResult.loserScore,
+                    winner: matchResult.winner,
+                    timestamp: new Date().toISOString()
+                });
+                localStorage.setItem('matchHistory', JSON.stringify(matchHistory));
+                
+                // 試合結果をクリア
+                localStorage.removeItem('matchResult');
+            }
+            
+            // トーナメント表を再描画
+            drawTournament();
         };
+
+        // 試合履歴を表示する関数
+        function showMatchHistory() {
+            const matchHistory = JSON.parse(localStorage.getItem('matchHistory')) || [];
+            const historyContainer = document.createElement('div');
+            historyContainer.style.position = 'absolute';
+            historyContainer.style.top = '700px';
+            historyContainer.style.left = '0';
+            historyContainer.style.padding = '10px';
+            historyContainer.style.backgroundColor = 'white';
+            historyContainer.style.border = '1px solid black';
+            historyContainer.style.maxHeight = '150px';
+            historyContainer.style.overflowY = 'auto';
+            historyContainer.style.fontSize = '12px';
+
+            const title = document.createElement('h3');
+            title.textContent = '試合履歴';
+            title.style.margin = '0 0 5px 0';
+            historyContainer.appendChild(title);
+
+            if (matchHistory.length === 0) {
+                const noHistory = document.createElement('p');
+                noHistory.textContent = '試合履歴はありません';
+                noHistory.style.margin = '0';
+                historyContainer.appendChild(noHistory);
+            } else {
+                const historyList = document.createElement('ul');
+                historyList.style.margin = '0';
+                historyList.style.paddingLeft = '15px';
+                matchHistory.forEach(match => {
+                    const matchItem = document.createElement('li');
+                    const date = new Date(match.timestamp);
+                    matchItem.textContent = `${match.round}: ${match.player1}(${match.score1}) vs ${match.player2}(${match.score2}) - ${match.winner}勝`;
+                    matchItem.style.margin = '2px 0';
+                    historyList.appendChild(matchItem);
+                });
+                historyContainer.appendChild(historyList);
+            }
+
+            document.body.appendChild(historyContainer);
+        }
+
+        // ページ読み込み時に試合履歴を表示
+        window.addEventListener('load', showMatchHistory);
     </script>
     <style>
         .match-buttons {

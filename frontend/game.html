@@ -67,7 +67,7 @@
         const PADDLE_WIDTH = 10;
         const PADDLE_HEIGHT = 100;
         const BALL_SIZE = 10;
-        const WINNING_SCORE = 5;
+        const WINNING_SCORE = 2;
 
         function initGame() {
             console.log('Initializing game...');
@@ -215,13 +215,18 @@
                 
                 // トーナメントページに戻る
                 setTimeout(() => {
-                    // ローカルストレージから情報を取得
-                    const storedMatchId = localStorage.getItem('matchId');
-                    const storedPlayer1Name = localStorage.getItem('player1Name');
-                    const storedPlayer2Name = localStorage.getItem('player2Name');
+                    // スコア情報をlocalStorageに保存
+                    localStorage.setItem('matchResult', JSON.stringify({
+                        matchId: matchId,
+                        winner: winner,
+                        winnerScore: winnerScore,
+                        loserScore: loserScore,
+                        player1: player1Name,
+                        player2: player2Name
+                    }));
                     
-                    window.location.href = `main.html?matchId=${storedMatchId}&winner=${encodeURIComponent(winner)}&score1=${winnerScore}&score2=${loserScore}&player1=${encodeURIComponent(storedPlayer1Name)}&player2=${encodeURIComponent(storedPlayer2Name)}`;
-                }, 2000);
+                    window.location.href = 'main.html';
+                }, 1000);
             }
 
             // 描画
