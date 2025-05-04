@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .game-container {
+            position: relative;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #000;
+        }
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 20px;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .start-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div id="startMessage" class="start-message">スペースキーでゲーム開始</div>
+        <div class="score-container">
+            <div id="player1Name">Player 1: <span id="leftScore">0</span></div>
+            <div id="player2Name">Player 2: <span id="rightScore">0</span></div>
+        </div>
+        <div class="controls">
+            <p id="player1Controls">Player 1: W/S キーでパドルを移動</p>
+            <p id="player2Controls">Player 2: ↑/↓ キーでパドルを移動</p>
+        </div>
+    </div>
+    <script>
+        let gameStarted = false;
+        let animationFrameId = null;
+        let canvas, ctx, leftScoreElement, rightScoreElement, startMessage;
+        let leftPaddle, rightPaddle, ball;
+        let keys = {};
+        let player1Name, player2Name, matchId;
+
+        // ゲーム設定
+        const PADDLE_WIDTH = 10;
+        const PADDLE_HEIGHT = 100;
+        const BALL_SIZE = 10;
+        const WINNING_SCORE = 5;
+
+        function initGame() {
+            console.log('Initializing game...');
+            
+            // URLパラメータからプレイヤー名を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            player1Name = urlParams.get('player1') || localStorage.getItem('player1Name') || 'Player 1';
+            player2Name = urlParams.get('player2') || localStorage.getItem('player2Name') || 'Player 2';
+            matchId = urlParams.get('matchId') || localStorage.getItem('matchId');
+
+            // ローカルストレージに保存
+            localStorage.setItem('player1Name', player1Name);
+            localStorage.setItem('player2Name', player2Name);
+            localStorage.setItem('matchId', matchId);
+
+            // 要素の取得を遅延させる
+            setTimeout(() => {
+                console.log('Getting elements...');
+                // 要素の取得
+                canvas = document.getElementById('gameCanvas');
+                ctx = canvas.getContext('2d');
+                leftScoreElement = document.getElementById('leftScore');
+                rightScoreElement = document.getElementById('rightScore');
+                startMessage = document.getElementById('startMessage');
+
+                // 要素の存在確認
+                if (!canvas) console.error('Canvas not found');
+                if (!ctx) console.error('Canvas context not found');
+                if (!leftScoreElement) console.error('Left score element not found');
+                if (!rightScoreElement) console.error('Right score element not found');
+                if (!startMessage) console.error('Start message element not found');
+
+                if (!canvas || !ctx || !leftScoreElement || !rightScoreElement || !startMessage) {
+                    console.error('必要な要素が見つかりません');
+                    return;
+                }
+
+                // プレイヤー名を表示
+                document.getElementById('player1Name').textContent = `${player1Name}: `;
+                document.getElementById('player2Name').textContent = `${player2Name}: `;
+                document.getElementById('player1Controls').textContent = `${player1Name}: W/S キーでパドルを移動`;
+                document.getElementById('player2Controls').textContent = `${player2Name}: ↑/↓ キーでパドルを移動`;
+
+                console.log('Setting up game objects...');
+                // ゲームオブジェクトの初期化
+                leftPaddle = {
+                    y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+                    score: 0
+                };
+                rightPaddle = {
+                    y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+                    score: 0
+                };
+                ball = {
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    dx: 5,
+                    dy: 5
+                };
+
+                console.log('Setting up event listeners...');
+                // キーボードイベントリスナー
+                document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('keyup', handleKeyUp);
+
+                console.log('Initial draw...');
+                // 初期描画
+                draw();
+            }, 100);
+        }
+
+        function handleKeyDown(e) {
+            keys[e.key] = true;
+            if (e.key === ' ' && !gameStarted) {
+                startGame();
+            }
+        }
+
+        function handleKeyUp(e) {
+            keys[e.key] = false;
+        }
+
+        function startGame() {
+            console.log('Starting game...');
+            gameStarted = true;
+            startMessage.style.display = 'none';
+            ball.dx = 5;
+            ball.dy = 5;
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameStarted) return;
+
+            // パドルの移動
+            if (keys['w'] && leftPaddle.y > 0) {
+                leftPaddle.y -= 7;
+            }
+            if (keys['s'] && leftPaddle.y < canvas.height - PADDLE_HEIGHT) {
+                leftPaddle.y += 7;
+            }
+            if (keys['ArrowUp'] && rightPaddle.y > 0) {
+                rightPaddle.y -= 7;
+            }
+            if (keys['ArrowDown'] && rightPaddle.y < canvas.height - PADDLE_HEIGHT) {
+                rightPaddle.y += 7;
+            }
+
+            // ボールの移動
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // ボールの跳ね返り
+            if (ball.y <= 0 || ball.y >= canvas.height) {
+                ball.dy = -ball.dy;
+            }
+
+            // パドルとの衝突
+            if (ball.x <= PADDLE_WIDTH && ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + PADDLE_HEIGHT) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.x >= canvas.width - PADDLE_WIDTH && ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + PADDLE_HEIGHT) {
+                ball.dx = -ball.dx;
+            }
+
+            // 得点
+            if (ball.x <= 0) {
+                rightPaddle.score++;
+                resetBall();
+            }
+            if (ball.x >= canvas.width) {
+                leftPaddle.score++;
+                resetBall();
+            }
+
+            // スコア更新
+            leftScoreElement.textContent = leftPaddle.score;
+            rightScoreElement.textContent = rightPaddle.score;
+
+            // 勝利判定
+            if (leftPaddle.score >= WINNING_SCORE || rightPaddle.score >= WINNING_SCORE) {
+                const winner = leftPaddle.score >= WINNING_SCORE ? player1Name : player2Name;
+                const winnerScore = leftPaddle.score >= WINNING_SCORE ? leftPaddle.score : rightPaddle.score;
+                const loserScore = leftPaddle.score >= WINNING_SCORE ? rightPaddle.score : leftPaddle.score;
+                
+                // トーナメントページに戻る
+                setTimeout(() => {
+                    // ローカルストレージから情報を取得
+                    const storedMatchId = localStorage.getItem('matchId');
+                    const storedPlayer1Name = localStorage.getItem('player1Name');
+                    const storedPlayer2Name = localStorage.getItem('player2Name');
+                    
+                    window.location.href = `main.html?matchId=${storedMatchId}&winner=${encodeURIComponent(winner)}&score1=${winnerScore}&score2=${loserScore}&player1=${encodeURIComponent(storedPlayer1Name)}&player2=${encodeURIComponent(storedPlayer2Name)}`;
+                }, 2000);
+            }
+
+            // 描画
+            draw();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function draw() {
+            // キャンバスクリア
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // パドル描画
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, leftPaddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+            ctx.fillRect(canvas.width - PADDLE_WIDTH, rightPaddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            // ボール描画
+            ctx.fillRect(ball.x - BALL_SIZE/2, ball.y - BALL_SIZE/2, BALL_SIZE, BALL_SIZE);
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = -ball.dx;
+            ball.dy = Math.random() * 10 - 5;
+        }
+
+        // DOMの読み込み完了を待ってゲームを初期化
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

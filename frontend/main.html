@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <title>トーナメント表</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="./style.css">
     <script src="./tournamentJs.js"></script>
     <script>
         function getUrlParams() {
@@ -208,6 +207,13 @@
                     }
                     // 現在のボタンを無効化
                     this.disabled = true;
+
+                    // ゲームページへの遷移
+                    var player1Name = document.getElementsByClassName('name-input')[currentIndex * 2].value;
+                    var player2Name = document.getElementsByClassName('name-input')[currentIndex * 2 + 1].value;
+                    var matchId = currentIndex + 1; // 試合IDとしてインデックス+1を使用
+                    
+                    window.location.href = `game.html?player1=${encodeURIComponent(player1Name)}&player2=${encodeURIComponent(player2Name)}&matchId=${matchId}`;
                 });
             }
         }

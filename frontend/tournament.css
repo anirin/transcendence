@@ -1,0 +1,48 @@
+/* トーナメント関連のスタイル */
+.tournament-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tournament-bracket {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.match {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.participant {
+    padding: 5px;
+    margin: 2px 0;
+    background-color: #fff;
+    border-radius: 3px;
+}
+
+.winner {
+    background-color: #d4edda;
+    font-weight: bold;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .tournament-container {
+        padding: 10px;
+    }
+    
+    .match {
+        padding: 5px;
+    }
+} 
