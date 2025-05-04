@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>トーナメント表</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <script src="./tournamentJs.js"></script>
+    <script>
+        function getUrlParams() {
+            var params = {};
+            var query = window.location.search.substring(1);
+            var vars = query.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split('=');
+                params[pair[0]] = decodeURIComponent(pair[1]);
+            }
+            return params;
+        }
+
+        function drawMatch(ctx, x1, y1, x2, y2, score1, score2) {
+            if (score1 > 0 || score2 > 0) {
+                if (score1 > score2) {
+                    ctx.strokeStyle = "red";
+                    ctx.lineWidth = 3;
+                } else if (score2 > score1) {
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 2;
+                } else {
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 2;
+                }
+            } else {
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+            }
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+
+        function drawGrid(ctx) {
+            ctx.strokeStyle = "gray";
+            ctx.lineWidth = 0.5;
+            ctx.font = "10px Arial";
+            ctx.fillStyle = "gray";
+            
+            // X軸の目盛り
+            for (var x = 0; x <= 800; x += 100) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 700);
+                ctx.stroke();
+                ctx.fillText(x, x, 10);
+            }
+            
+            // Y軸の目盛り
+            for (var y = 0; y <= 700; y += 100) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(800, y);
+                ctx.stroke();
+                ctx.fillText(y, 0, y);
+            }
+        }
+
+        function updateWinnerNames() {
+            var nameInputs = document.getElementsByClassName('name-input');
+            var scoreInputs = document.getElementsByClassName('score-input');
+            
+            // 1回戦1試合目の勝者
+            var score1 = parseInt(scoreInputs[0].value) || 0;
+            var score2 = parseInt(scoreInputs[1].value) || 0;
+            if (score1 > score2) {
+                nameInputs[4].value = nameInputs[0].value;
+            } else if (score2 > score1) {
+                nameInputs[4].value = nameInputs[1].value;
+            } else {
+                nameInputs[4].value = '';
+            }
+            
+            // 1回戦2試合目の勝者
+            var score3 = parseInt(scoreInputs[2].value) || 0;
+            var score4 = parseInt(scoreInputs[3].value) || 0;
+            if (score3 > score4) {
+                nameInputs[5].value = nameInputs[2].value;
+            } else if (score4 > score3) {
+                nameInputs[5].value = nameInputs[3].value;
+            } else {
+                nameInputs[5].value = '';
+            }
+            
+            // 決勝戦の勝者
+            var score5 = parseInt(scoreInputs[4].value) || 0;
+            var score6 = parseInt(scoreInputs[5].value) || 0;
+            if (score5 > score6) {
+                nameInputs[6].value = nameInputs[4].value;
+            } else if (score6 > score5) {
+                nameInputs[6].value = nameInputs[5].value;
+            } else {
+                nameInputs[6].value = '';
+            }
+        }
+
+        function drawTournament() {
+            var canvas = document.getElementById('tournament');
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // グリッドを描画
+            drawGrid(ctx);
+            
+            // 1回戦の線（2試合）
+            // 1試合目
+            var score1 = parseInt(document.getElementsByClassName('score-input')[0].value) || 0;
+            var score2 = parseInt(document.getElementsByClassName('score-input')[1].value) || 0;
+            
+            // 1試合目の横線
+            drawMatch(ctx, 100, 150, 300, 150, score1, score2);
+            drawMatch(ctx, 100, 250, 300, 250, score2, score1);
+            
+            // 1試合目の縦線
+            drawMatch(ctx, 300, 150, 300, 200, score1, score2);
+            drawMatch(ctx, 300, 200, 300, 250, score2, score1);
+            
+            // 2試合目
+            var score3 = parseInt(document.getElementsByClassName('score-input')[2].value) || 0;
+            var score4 = parseInt(document.getElementsByClassName('score-input')[3].value) || 0;
+            
+            // 2試合目の横線
+            drawMatch(ctx, 100, 450, 300, 450, score3, score4);
+            drawMatch(ctx, 100, 550, 300, 550, score4, score3);
+            
+            // 2試合目の縦線
+            drawMatch(ctx, 300, 450, 300, 500, score3, score4);
+            drawMatch(ctx, 300, 500, 300, 550, score4, score3);
+            
+            // 決勝戦の線
+            var score5 = parseInt(document.getElementsByClassName('score-input')[4].value) || 0;
+            var score6 = parseInt(document.getElementsByClassName('score-input')[5].value) || 0;
+            
+            // 決勝戦の横線
+            drawMatch(ctx, 300, 200, 500, 200, score5, score6);
+            drawMatch(ctx, 300, 500, 500, 500, score6, score5);
+            
+            // 決勝戦の縦線
+            drawMatch(ctx, 500, 200, 500, 350, score5, score6);
+            drawMatch(ctx, 500, 350, 500, 500, score6, score5);
+
+            // 勝者の名前を更新
+            updateWinnerNames();
+        }
+
+        function setupInputFields() {
+            var params = getUrlParams();
+            var names = params.names ? params.names.split(',') : ['', '', '', ''];
+            
+            var nameInputs = document.getElementsByClassName('name-input');
+            var scoreInputs = document.getElementsByClassName('score-input');
+            
+            // 1回戦の参加者
+            var positions = [
+                { left: '100px', top: '140px', scoreLeft: '160px', scoreTop: '140px' },
+                { left: '100px', top: '240px', scoreLeft: '160px', scoreTop: '240px' },
+                { left: '100px', top: '440px', scoreLeft: '160px', scoreTop: '440px' },
+                { left: '100px', top: '540px', scoreLeft: '160px', scoreTop: '540px' }
+            ];
+            
+            for (var i = 0; i < 4; i++) {
+                nameInputs[i].style.left = positions[i].left;
+                nameInputs[i].style.top = positions[i].top;
+                nameInputs[i].value = names[i];
+                scoreInputs[i].style.left = positions[i].scoreLeft;
+                scoreInputs[i].style.top = positions[i].scoreTop;
+            }
+            
+            // 2回戦（決勝戦）の参加者
+            nameInputs[4].style.left = '300px';
+            nameInputs[4].style.top = '190px';
+            scoreInputs[4].style.left = '360px';
+            scoreInputs[4].style.top = '190px';
+            
+            nameInputs[5].style.left = '300px';
+            nameInputs[5].style.top = '490px';
+            scoreInputs[5].style.left = '360px';
+            scoreInputs[5].style.top = '490px';
+            
+            // 決勝戦の勝者
+            nameInputs[6].style.left = '500px';
+            nameInputs[6].style.top = '340px';
+            
+            // 得点入力欄にイベントリスナーを追加
+            for (var i = 0; i < scoreInputs.length; i++) {
+                scoreInputs[i].addEventListener('input', drawTournament);
+            }
+        }
+
+        onload = function() {
+            setupInputFields();
+            drawTournament();
+        };
+    </script>
+</head>
+<body>
+    <div style="position:relative">
+        <canvas id="tournament" width="800" height="700"></canvas>
+        <!-- 1回戦 -->
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <!-- 2回戦 -->
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+        <input type="number" class="score-input" style="position:absolute; width: 50px;">
+        <!-- 決勝戦 -->
+        <input type="text" class="name-input" style="position:absolute; width: 50px;">
+    </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <title>初期設定</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+    <script src="./tournamentJs.js"></script>
+    <script type="text/javascript">
+		function openPage() {
+            var names = [];
+            var inputs = document.getElementsByName('names');
+            for (var i = 0; i < inputs.length; i++) {
+                names.push(encodeURIComponent(inputs[i].value));
+            }
+            var url = "./main.html?names=" + names.join(',');
+			window.location.href = url;
+		}
+    </script>
+</head>
+<body>
+	<div class="inputBlock">
+		<div class="inputSet">
+			<input type="text" name="names" value="" placeholder="参加者名" />
+		</div>
+		<div class="inputSet">
+			<input type="text" name="names" value="" placeholder="参加者名" />
+		</div>
+		<div class="inputSet">
+			<input type="text" name="names" value="" placeholder="参加者名" />
+		</div>
+		<div class="inputSet">
+			<input type="text" name="names" value="" placeholder="参加者名" />
+		</div>
+		<div class="edit">
+			<button class="btn" onclick="openPage();">トーナメントを作る</button>
+		</div>
+	</div>
+</body>
+</html>
