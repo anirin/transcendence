@@ -196,11 +196,46 @@
             }
         }
 
+        function setupMatchButtons() {
+            var matchButtons = document.getElementsByClassName('match-button');
+            for (var i = 0; i < matchButtons.length; i++) {
+                matchButtons[i].disabled = i !== 0;
+                matchButtons[i].addEventListener('click', function() {
+                    var currentIndex = Array.from(matchButtons).indexOf(this);
+                    // 次の試合のボタンを有効化
+                    if (currentIndex + 1 < matchButtons.length) {
+                        matchButtons[currentIndex + 1].disabled = false;
+                    }
+                    // 現在のボタンを無効化
+                    this.disabled = true;
+                });
+            }
+        }
+
         onload = function() {
             setupInputFields();
             drawTournament();
+            setupMatchButtons();
         };
     </script>
+    <style>
+        .match-buttons {
+            position: absolute;
+            top: 700px;
+            left: 0;
+            padding: 20px;
+        }
+        .match-button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .match-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
     <div style="position:relative">
@@ -221,6 +256,11 @@
         <input type="number" class="score-input" style="position:absolute; width: 50px;">
         <!-- 決勝戦 -->
         <input type="text" class="name-input" style="position:absolute; width: 50px;">
+    </div>
+    <div class="match-buttons">
+        <button class="match-button">1回戦 Player1 vs Player2</button>
+        <button class="match-button">1回戦 Player3 vs Player4</button>
+        <button class="match-button">決勝戦</button>
     </div>
 </body>
 </html>
