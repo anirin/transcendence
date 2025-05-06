@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTournament } from '../context/TournamentContext';
 
 interface TournamentMatch {
 	player1: string;
@@ -7,9 +8,8 @@ interface TournamentMatch {
 }
 
 const Tournament = () => {
-	const location = useLocation();
-	const { fields } = location.state as { fields: string[] };
-	const [matches, setMatches] = useState<TournamentMatch[]>([]);
+	const navigate = useNavigate();
+	const { fields, matches, setMatches } = useTournament();
 
 	useEffect(() => {
 		// 2のべき乗の計算
@@ -40,7 +40,11 @@ const Tournament = () => {
 		}
 
 		setMatches(firstRoundMatches);
-	}, [fields]);
+	}, [fields, setMatches]);
+
+	const handleMatchClick = (match: TournamentMatch) => {
+		navigate('/ping-pong', { state: { player1: match.player1, player2: match.player2 } });
+	};
 
 	return (
 		<div>
@@ -48,7 +52,7 @@ const Tournament = () => {
 			<div>
 				<h2>1回戦 対戦カード</h2>
 				{matches.map((match, index) => (
-					<button key={index}>
+					<button key={index} onClick={() => handleMatchClick(match)}>
 						{match.player1} vs {match.player2}
 					</button>
 				))}
