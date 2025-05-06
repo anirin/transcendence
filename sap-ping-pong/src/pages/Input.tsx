@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 // Input はプレイヤー名と人数 tournament に渡すための機能を持つ
 
 const Input = () => {
-	const [fields, setFields] = useState<string[]>([]);
+	const [fields, setFields] = useState<string[]>(["太郎", "二郎", "三郎", "四郎", "吾郎"]);
 	const navigate = useNavigate();
 
 	const handleChange = (index: number, value: string) => {
